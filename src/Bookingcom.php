@@ -7,7 +7,7 @@ use Symfony\Component\DomCrawler\Crawler;
 
 class Bookingcom {
 
-    private $client;
+    public $client;
     private $headers;
     public $location;
     public $country;
@@ -66,7 +66,11 @@ class Bookingcom {
     public function getHotels($html) {
         $crawler = new Crawler($html);
         $links = $crawler->filter('.hotel_name_link')->each(function(Crawler $node, $i) {
-            return $node->attr('href');
+            $link = $node->attr('href'); 
+            if(strpos($link, 'booking.com') === FALSE){
+                $link = 'https://booking.com'.$link; 
+            }
+            return $link;
         });
         return $links;
     }
