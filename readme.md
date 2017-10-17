@@ -13,11 +13,10 @@ $booking = new Bookingcom;
  * 
  * use parameters from original url on booking.com site 
  * 
- * search('ss', 'ss', 'dest_id', 'dest_type') 
- * ss parameter is location + country in the original url
+ * search('dest_id', 'dest_type') 
  */
 
-$first_search_results = $booking->search('São Miguel', 'Portugal', '3343', 'region');  
+$first_search_results = $booking->search('3343', 'region');  
 
 //fetch all individual hotel links form serach result 
 
