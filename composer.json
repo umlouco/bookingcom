@@ -10,7 +10,7 @@
             "email": "umlouco@hotmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "guzzlehttp/guzzle": "^6.2",
         "symfony/dom-crawler": "^3.2",
