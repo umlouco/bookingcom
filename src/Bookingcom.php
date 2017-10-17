@@ -24,7 +24,7 @@ class Bookingcom {
             'http_errors' => false
         ]);
     }
-
+    
     private function setHeaders($headers = null) {
         if (is_null($headers)) {
             $this->header = [
@@ -35,17 +35,17 @@ class Bookingcom {
             $this->headers = $headers;
         }
     }
-
+    
     public function searchUrl() {
-        if (empty($this->location) or empty($this->country)) {
+        if (empty($this->dest_id) or empty($this->dest_type)) {
             throw new \RuntimeException("Can not search, location has not been set.");
         }
-        return "https://www.booking.com/searchresults.html?dest_id=3343&dest_type=region&dtdisc=0&group_adults=1&group_children=0&inac=0&index_postcard=0&label_click=undef&no_rooms=1&offset=0&postcard=0&raw_dest_type=region&room1=A&sb_price_type=total&search_selected=1&src=index&src_elem=sb&ss=" . $this->location . "%2C%20" . $this->country . "&ss_all=0&ss_raw=" . $this->location . "&ssb=empty&sshis=0";
+        return "https://www.booking.com/searchresults.html?dest_id=".$this->dest_id."&dest_type=".$this->dest_type."&dtdisc=0&group_adults=1&group_children=0&inac=0&index_postcard=0&label_click=undef&no_rooms=1&offset=0&postcard=0&raw_dest_type=region&room1=A&sb_price_type=total&search_selected=1&src=index&src_elem=sb&ss=&ss_all=0&ss_raw=&ssb=empty&sshis=0";
     }
 
-    public function search($location, $country) {
-        $this->location = urlencode($location);
-        $this->country = urlencode($country);
+    public function search($dest_id, $dest_type) {
+        $this->dest_type = $dest_type; 
+        $this->dest_id = $dest_id; 
         $this->setGuzzle();
         $response = $this->client->request("GET", $this->searchUrl());
         return $response->getBody()->getContents();
@@ -53,9 +53,12 @@ class Bookingcom {
 
     public function getNextPage($html) {
         $crawler = new Crawler($html);
+        if($crawler->filter('.x-list > .current')->count() == 0){
+            return false; 
+        }
         if ($crawler->filter('.x-list > .current')->nextAll()->count() == 0) {
             return false;
-        }
+        } 
         $next = $crawler->filter('.x-list > .current')->nextAll()->eq(0)->filter('a')->attr('href');
         if (empty($next)) {
             throw new RuntimeException("Next links is empty");
@@ -68,7 +71,7 @@ class Bookingcom {
         $links = $crawler->filter('.hotel_name_link')->each(function(Crawler $node, $i) {
             $link = $node->attr('href'); 
             if(strpos($link, 'booking.com') === FALSE){
-                $link = 'https://booking.com'.$link; 
+                $link = 'https://booking.com'.trim(str_replace(' ', '', $link)); 
             }
             return $link;
         });

@@ -8,13 +8,22 @@ use MarioFlores\Bookingcom\Bookingcom;
 
 $booking = new Bookingcom;
 
-//search for hotels and get a list of links to individual pages 
+/**
+ * Get the first search result page
+ * 
+ * use parameters from original url on booking.com site 
+ * 
+ * search('ss', 'ss', 'dest_id', 'dest_type') 
+ * ss parameter is location + country in the original url
+ */
 
-$first_search_results = $booking->search('São Miguel', 'Portugal'); 
+$first_search_results = $booking->search('São Miguel', 'Portugal', '3343', 'region');  
 
 //fetch all individual hotel links form serach result 
 
 $all_links = $booking->listAllHotels($first_search_results); 
+
+var_dump($all_links); 
 
 //fetch data from one hotel using link 
 
