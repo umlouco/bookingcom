@@ -1,0 +1,24 @@
+{
+    "name": "marioflores/Bookingcom",
+    "description": "Scrape properties from booking.com", 
+    "license": "MIT", 
+    "keywords": ["booking", "scrape"], 
+    "authors": [
+        {
+            "name": "Mario Flores", 
+            "email": "umlouco@hotmail.com"
+        }
+    ], 
+    "require": {
+        "guzzlehttp/guzzle": "^6.2",
+        "symfony/dom-crawler": "^3.2",
+        "symfony/css-selector": "^3.2"
+    }, 
+    "require-dev": {
+    }, 
+    "autoload": {
+        "psr-4": {
+            "MarioFlores\\Bookingcom\\": "src"
+        }
+    }
+}
