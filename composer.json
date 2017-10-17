@@ -2,7 +2,6 @@
     "name": "marioflores/bookingcom",
     "description": "Scrape properties from booking.com",
     "version":"1.0.0",
-    "minimum-stability": "stable",
     "license": "MIT", 
     "keywords": ["booking", "scrape"], 
     "authors": [
@@ -10,13 +9,12 @@
             "name": "Mario Flores", 
             "email": "umlouco@hotmail.com"
         }
-    ], 
+    ],
+    "minimum-stability": "dev",
     "require": {
         "guzzlehttp/guzzle": "^6.2",
         "symfony/dom-crawler": "^3.2",
         "symfony/css-selector": "^3.2"
-    }, 
-    "require-dev": {
     }, 
     "autoload": {
         "psr-4": {
