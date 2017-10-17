@@ -1,5 +1,5 @@
 {
-    "name": "marioflores/Bookingcom",
+    "name": "marioflores/bookingcom",
     "description": "Scrape properties from booking.com", 
     "license": "MIT", 
     "keywords": ["booking", "scrape"], 
