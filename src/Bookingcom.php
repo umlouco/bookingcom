@@ -108,26 +108,25 @@ class Bookingcom {
             }
             $html = $response->getBody()->getContents();
             $crawler = new Crawler($html);
-            $hotel['nome'] = trim($crawler->filter('#hp_hotel_name')->text());
-            $hotel['morada'] = trim($crawler->filter(".hp_address_subtitle")->text());
-            $hotel['url'] = "https://www.booking.com" . $link;
+            $hotel['name'] = trim($crawler->filter('#hp_hotel_name')->text());
+            $hotel['address'] = trim($crawler->filter(".hp_address_subtitle")->text());
+            $hotel['url'] = $link;
             preg_match("/atnm: '(.*?)\',/s", $crawler->html(), $matches);
-            $hotel['tipo'] = $matches[1];
-            $hotel['origem'] = 'booking';
+            $hotel['type'] = $matches[1];
             preg_match("/hotel_id: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['id_externo'] = $matches[1];
+            $hotel['id'] = $matches[1];
             preg_match("/city_name: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['cidade'] = $matches[1];
+            $hotel['city'] = $matches[1];
             preg_match("/\"ratingValue\" \: (.*?),/s", $crawler->html(), $matches);
             $hotel['rating'] = $matches[1];
             preg_match("/booking.env.b_map_center_latitude = (.*?);/s", $crawler->html(), $matches);
-            $hotel['lat'] = $matches[1];
+            $hotel['latitude'] = $matches[1];
             preg_match("/booking.env.b_map_center_longitude = (.*?);/s", $crawler->html(), $matches);
-            $hotel['long'] = $matches[1];
+            $hotel['longitude'] = $matches[1];
             preg_match("/region_name: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['regiao'] = $matches[1];
+            $hotel['region'] = $matches[1];
             preg_match("/name=\"maxrooms\" value=\"(.*?)\"/s", $crawler->html(), $matches);
-            $hotel['quartos'] = $matches[1];
+            $hotel['rooms'] = $matches[1];
         } catch (Exception $ex) {
             $this->errors[] = $ex->getMessage();
         }
