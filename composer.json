@@ -1,6 +1,8 @@
 {
     "name": "marioflores/bookingcom",
-    "description": "Scrape properties from booking.com", 
+    "description": "Scrape properties from booking.com",
+    "version":"1.0.0",
+    "minimum-stability": "dev",
     "license": "MIT", 
     "keywords": ["booking", "scrape"], 
     "authors": [
