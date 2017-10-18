@@ -3,6 +3,8 @@
 namespace MarioFlores\Bookingcom;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Psr7;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DomCrawler\Crawler;
 
 class Bookingcom {
@@ -24,7 +26,7 @@ class Bookingcom {
             'http_errors' => false
         ]);
     }
-    
+
     private function setHeaders($headers = null) {
         if (is_null($headers)) {
             $this->header = [
@@ -35,17 +37,17 @@ class Bookingcom {
             $this->headers = $headers;
         }
     }
-    
+
     public function searchUrl() {
         if (empty($this->dest_id) or empty($this->dest_type)) {
             throw new \RuntimeException("Can not search, location has not been set.");
         }
-        return "https://www.booking.com/searchresults.html?dest_id=".$this->dest_id."&dest_type=".$this->dest_type."&dtdisc=0&group_adults=1&group_children=0&inac=0&index_postcard=0&label_click=undef&no_rooms=1&offset=0&postcard=0&raw_dest_type=region&room1=A&sb_price_type=total&search_selected=1&src=index&src_elem=sb&ss=&ss_all=0&ss_raw=&ssb=empty&sshis=0";
+        return "https://www.booking.com/searchresults.html?dest_id=" . $this->dest_id . "&dest_type=" . $this->dest_type . "&dtdisc=0&group_adults=1&group_children=0&inac=0&index_postcard=0&label_click=undef&no_rooms=1&offset=0&postcard=0&raw_dest_type=region&room1=A&sb_price_type=total&search_selected=1&src=index&src_elem=sb&ss=&ss_all=0&ss_raw=&ssb=empty&sshis=0";
     }
 
     public function search($dest_id, $dest_type) {
-        $this->dest_type = $dest_type; 
-        $this->dest_id = $dest_id; 
+        $this->dest_type = $dest_type;
+        $this->dest_id = $dest_id;
         $this->setGuzzle();
         $response = $this->client->request("GET", $this->searchUrl());
         return $response->getBody()->getContents();
@@ -53,12 +55,12 @@ class Bookingcom {
 
     public function getNextPage($html) {
         $crawler = new Crawler($html);
-        if($crawler->filter('.x-list > .current')->count() == 0){
-            return false; 
+        if ($crawler->filter('.x-list > .current')->count() == 0) {
+            return false;
         }
         if ($crawler->filter('.x-list > .current')->nextAll()->count() == 0) {
             return false;
-        } 
+        }
         $next = $crawler->filter('.x-list > .current')->nextAll()->eq(0)->filter('a')->attr('href');
         if (empty($next)) {
             throw new RuntimeException("Next links is empty");
@@ -69,9 +71,9 @@ class Bookingcom {
     public function getHotels($html) {
         $crawler = new Crawler($html);
         $links = $crawler->filter('.hotel_name_link')->each(function(Crawler $node, $i) {
-            $link = $node->attr('href'); 
-            if(strpos($link, 'booking.com') === FALSE){
-                $link = 'https://booking.com'.trim(str_replace(' ', '', $link)); 
+            $link = $node->attr('href');
+            if (strpos($link, 'booking.com') === FALSE) {
+                $link = 'https://booking.com' . trim(str_replace(' ', '', $link));
             }
             return $link;
         });
@@ -91,7 +93,7 @@ class Bookingcom {
                 $links = $this->getHotels($html);
                 $hotel_links = array_merge($hotel_links, $links);
                 $next = $this->getNextPage($html);
-            } catch (Exception $ex) {
+            } catch (RequestException $ex) {
                 $this->errors[] = $ex->getMessage();
             }
         }
@@ -101,6 +103,7 @@ class Bookingcom {
 
     function getHotel($link) {
         $this->setGuzzle();
+
         try {
             $response = $this->client->request("GET", $link);
             if ($response->getStatusCode() != 200) {
@@ -108,27 +111,52 @@ class Bookingcom {
             }
             $html = $response->getBody()->getContents();
             $crawler = new Crawler($html);
-            $hotel['name'] = trim($crawler->filter('#hp_hotel_name')->text());
-            $hotel['address'] = trim($crawler->filter(".hp_address_subtitle")->text());
-            $hotel['url'] = $link;
-            preg_match("/atnm: '(.*?)\',/s", $crawler->html(), $matches);
-            $hotel['type'] = $matches[1];
-            preg_match("/hotel_id: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['id'] = $matches[1];
-            preg_match("/city_name: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['city'] = $matches[1];
-            preg_match("/\"ratingValue\" \: (.*?),/s", $crawler->html(), $matches);
-            $hotel['rating'] = $matches[1];
-            preg_match("/booking.env.b_map_center_latitude = (.*?);/s", $crawler->html(), $matches);
-            $hotel['latitude'] = $matches[1];
-            preg_match("/booking.env.b_map_center_longitude = (.*?);/s", $crawler->html(), $matches);
-            $hotel['longitude'] = $matches[1];
-            preg_match("/region_name: '(.*?)',/s", $crawler->html(), $matches);
-            $hotel['region'] = $matches[1];
-            preg_match("/name=\"maxrooms\" value=\"(.*?)\"/s", $crawler->html(), $matches);
-            $hotel['rooms'] = $matches[1];
-        } catch (Exception $ex) {
+            try {
+                if ($crawler->filter('#hp_hotel_name')->count() == 0) {
+                    return false;
+                }
+                $hotel['name'] = trim($crawler->filter('#hp_hotel_name')->text());
+                $hotel['address'] = trim($crawler->filter(".hp_address_subtitle")->text());
+                $hotel['url'] = $link;
+                preg_match("/atnm: '(.*?)\',/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['type'] = $matches[1];
+                }
+                preg_match("/hotel_id: '(.*?)',/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['id'] = $matches[1];
+                }
+                preg_match("/city_name: '(.*?)',/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['city'] = $matches[1];
+                }
+                preg_match("/\"ratingValue\" \: (.*?),/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['rating'] = $matches[1];
+                }
+                preg_match("/booking.env.b_map_center_latitude = (.*?);/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['latitude'] = $matches[1];
+                }
+                preg_match("/booking.env.b_map_center_longitude = (.*?);/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['longitude'] = $matches[1];
+                }
+                preg_match("/region_name: '(.*?)',/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['region'] = $matches[1];
+                }
+                preg_match("/name=\"maxrooms\" value=\"(.*?)\"/s", $crawler->html(), $matches);
+                if (!empty($matches[1])) {
+                    $hotel['rooms'] = $matches[1];
+                }
+            } catch (RequestException $ex) {
+                $this->errors[] = $ex->getMessage();
+                return false;
+            }
+        } catch (RequestException $ex) {
             $this->errors[] = $ex->getMessage();
+            return false;
         }
         return $hotel;
     }
@@ -150,11 +178,14 @@ class Bookingcom {
                         $photos[] = $url;
                     }
                 }
+                return $photos;
             }
-        } catch (Exception $ex) {
+            
+        } catch (RequestException $ex) {
             $this->errors[] = $ex->getMessage();
+            return false; 
         }
-        return $photos;
+        
     }
 
     function getPrice($link) {
@@ -175,8 +206,9 @@ class Bookingcom {
                     }
                 }
             }
-        } catch (Exception $ex) {
+        } catch (RequestException $ex) {
             $this->errors[] = $ex->getMessage();
         }
     }
+
 }
